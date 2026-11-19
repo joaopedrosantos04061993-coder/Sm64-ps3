@@ -21,6 +21,13 @@ jobs:
           path: ps3dev
           key: ps3toolchain-v1
 
+      - name: Configurar PATH do ps3dev
+        run: |
+          mkdir -p "$PS3DEV"
+          echo "$PS3DEV/bin" >> "$GITHUB_PATH"
+          echo "$PS3DEV/ppu/bin" >> "$GITHUB_PATH"
+          echo "$PS3DEV/spu/bin" >> "$GITHUB_PATH"
+
       - name: Dependencias
         if: steps.tc.outputs.cache-hit != 'true'
         run: |
@@ -32,7 +39,6 @@ jobs:
       - name: Compilar ps3toolchain (demora)
         if: steps.tc.outputs.cache-hit != 'true'
         run: |
-          mkdir -p "$PS3DEV"
           git clone --depth 1 https://github.com/ps3dev/ps3toolchain.git
           cd ps3toolchain
           ./toolchain.sh
@@ -49,15 +55,11 @@ jobs:
 
       - name: Compilar teste de fumaca
         working-directory: sm64coopdx-ps3
-        run: |
-          export PATH="$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin:$PATH"
-          make -f Makefile.ps3 PS3_NETLOG_IP=192.168.0.10 smoke
+        run: make -f Makefile.ps3 PS3_NETLOG_IP=192.168.0.10 smoke
 
       - name: Gerar PKG
         working-directory: sm64coopdx-ps3
-        run: |
-          export PATH="$PS3DEV/bin:$PS3DEV/ppu/bin:$PS3DEV/spu/bin:$PATH"
-          make -f Makefile.ps3 smoke.pkg
+        run: make -f Makefile.ps3 smoke.pkg
 
       - uses: actions/upload-artifact@v4
         if: always()
