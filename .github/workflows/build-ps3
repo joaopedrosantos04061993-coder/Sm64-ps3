@@ -6,18 +6,20 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    container: ps3dev/ps3dev:latest
-    env:
-      PS3DEV: /usr/local/ps3dev
-      PSL1GHT: /usr/local/ps3dev
     steps:
       - uses: actions/checkout@v4
-      - run: make -f Makefile.ps3 PS3_NETLOG_IP="${{ vars.NETLOG_IP || '192.168.0.10' }}" smoke
-      - run: make -f Makefile.ps3 smoke.pkg
+      - name: Extrair zip
+        run: unzip -q sm64coopdx-ps3.zip
+      - name: Compilar no container ps3dev
+        run: |
+          docker run --rm -v "$PWD/sm64coopdx-ps3:/work" -w /work \
+            -e PS3DEV=/usr/local/ps3dev -e PSL1GHT=/usr/local/ps3dev \
+            ps3dev/ps3dev:latest \
+            sh -c 'make -f Makefile.ps3 PS3_NETLOG_IP=192.168.0.10 smoke && make -f Makefile.ps3 smoke.pkg'
       - uses: actions/upload-artifact@v4
         with:
           name: sm64coopdx-ps3-smoke
           path: |
-            *.pkg
-            *.self
-            *.elf
+            sm64coopdx-ps3/*.pkg
+            sm64coopdx-ps3/*.self
+            sm64coopdx-ps3/*.elf
